@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: ../movie-ticket-frontend
+    container_name: movieticket-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - app
+
+  app:
+    build: .
+    container_name: movieticket-app
+    expose:
+      - "8080"
+    environment:
+      DB_HOST: db
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      REDIS_HOST: redis
+      JWT_SECRET: Yn2V9xH8LkP4mR7sT1wZ5aQ3cE6bN0dF8gJ2iK4oP6rS9uV1xY3zA5wB7nC0mQ==
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  db:
+    image: mysql:8.0
+    container_name: movieticket-db
+    environment:
+      MYSQL_DATABASE: movieticket
+      MYSQL_ROOT_PASSWORD: root
+    expose:
+      - "3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: movieticket-redis
+    expose:
+      - "6379"
+
+volumes:
+  mysql_data:
